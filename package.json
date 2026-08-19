@@ -1,0 +1,29 @@
+{
+  "name": "dropbox-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Dropbox (Business/Team): file management, search, shared links, and document reference.",
+  "type": "module",
+  "bin": {
+    "dropbox-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "auth": "node scripts/get-refresh-token.mjs",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "license": "MIT",
+  "author": "Victor Miranda"
+}
