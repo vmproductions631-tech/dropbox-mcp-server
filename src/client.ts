@@ -42,6 +42,17 @@ function requireEnv(name: string): string {
   return v;
 }
 
+/**
+ * Wrap a thrown value as a network error — unless it is already a DropboxError,
+ * in which case it is a shaped, actionable message (a missing env var, say) that
+ * happened to be raised inside the fetch try-block. Re-categorising those as
+ * "network error" hides the real cause.
+ */
+function asTransportError(err: unknown, action: string): DropboxError {
+  if (err instanceof DropboxError) return err;
+  return new DropboxError(`Network error ${action}: ${(err as Error).message}`);
+}
+
 async function fetchAccessToken(): Promise<{ token: string; expiresIn: number }> {
   const body = new URLSearchParams({
     grant_type: "refresh_token",
@@ -58,9 +69,7 @@ async function fetchAccessToken(): Promise<{ token: string; expiresIn: number }>
       body,
     });
   } catch (err) {
-    throw new DropboxError(
-      `Network error refreshing Dropbox token: ${(err as Error).message}.`,
-    );
+    throw asTransportError(err, "refreshing the Dropbox token");
   }
 
   const text = await res.text();
@@ -193,7 +202,7 @@ export async function dropboxRpc<T = unknown>(
     res = await doFetch(await getAccessToken());
     if (res.status === 401) res = await doFetch(await getAccessToken(true));
   } catch (err) {
-    throw new DropboxError(`Network error calling Dropbox: ${(err as Error).message}.`);
+    throw asTransportError(err, "calling Dropbox");
   }
 
   const text = await res.text();
@@ -240,7 +249,7 @@ export async function dropboxDownload(
     res = await doFetch(await getAccessToken());
     if (res.status === 401) res = await doFetch(await getAccessToken(true));
   } catch (err) {
-    throw new DropboxError(`Network error downloading from Dropbox: ${(err as Error).message}.`);
+    throw asTransportError(err, "downloading from Dropbox");
   }
 
   if (!res.ok) {
@@ -290,7 +299,7 @@ export async function dropboxContentRpc<T = unknown>(
     res = await doFetch(await getAccessToken());
     if (res.status === 401) res = await doFetch(await getAccessToken(true));
   } catch (err) {
-    throw new DropboxError(`Network error uploading to Dropbox: ${(err as Error).message}.`);
+    throw asTransportError(err, "uploading to Dropbox");
   }
 
   const text = await res.text();
